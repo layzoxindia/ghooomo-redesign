@@ -20,6 +20,18 @@
   const tabs=[...document.querySelectorAll('[data-scene]')],img=document.querySelector('.home-backdrop img'),link=document.getElementById('enter-world');
   let sceneVersion=0;
   function setScene(key){const s=scenes[key],version=++sceneVersion;document.querySelector(".home-stage").dataset.activeWorld=key;tabs.forEach(t=>{const active=t.dataset.scene===key;t.setAttribute('aria-selected',String(active));t.tabIndex=active?0:-1});link.href='/'+key+'/';link.lastElementChild.replaceChildren(document.createTextNode(s.label));const small=document.createElement('small');small.textContent=s.note;link.lastElementChild.append(small);root.style.setProperty('--accent',s.accent);const next=new Image();next.onload=()=>{if(version!==sceneVersion)return;img.src=next.src;img.alt=s.alt;img.animate([{opacity:.35},{opacity:1}],{duration:paused?0:650,easing:'ease-out'})};next.src='/assets/scenes/'+s.photo+'.webp';}
+  // Swipe the three-world preview on touch screens, without hijacking vertical page scroll.
+  const stage=document.querySelector('.home-stage');
+  let startX=0,startY=0;
+  stage.addEventListener('touchstart',e=>{if(e.touches.length!==1)return;startX=e.touches[0].clientX;startY=e.touches[0].clientY},{passive:true});
+  stage.addEventListener('touchend',e=>{
+   if(e.changedTouches.length!==1||e.target.closest('button,a,nav,[data-plan]'))return;
+   const dx=e.changedTouches[0].clientX-startX,dy=e.changedTouches[0].clientY-startY;
+   if(Math.abs(dx)<65||Math.abs(dx)<Math.abs(dy)*1.5)return;
+   const current=tabs.findIndex(t=>t.getAttribute('aria-selected')==='true');
+   const next=Math.max(0,Math.min(tabs.length-1,current+(dx<0?1:-1)));
+   if(next!==current)setScene(tabs[next].dataset.scene);
+  },{passive:true});
   tabs.forEach((t,i)=>{t.tabIndex=i===0?0:-1;t.addEventListener('click',()=>setScene(t.dataset.scene));t.addEventListener('keydown',e=>{if(!['ArrowRight','ArrowLeft','Home','End'].includes(e.key))return;e.preventDefault();const n=e.key==='Home'?0:e.key==='End'?2:(i+(e.key==='ArrowRight'?1:2))%3;tabs[n].focus();setScene(tabs[n].dataset.scene)})});
  }
 
@@ -31,7 +43,7 @@
   let ticking=false;
   function paintJourney(){
    ticking=false;
-   if(paused)return;
+   if(paused||reduced.matches)return;
    const rect=sequence.getBoundingClientRect();
    const viewport=innerHeight||1;
    const progress=Math.max(0,Math.min(1,(viewport-rect.top)/(viewport+rect.height)));
@@ -50,6 +62,7 @@
   addEventListener('scroll',queueJourney,{passive:true});
   addEventListener('resize',queueJourney,{passive:true});
   motion.addEventListener('click',queueJourney);
+  reduced.addEventListener('change',queueJourney);
   queueJourney();
  }
 
@@ -74,7 +87,7 @@
  document.querySelector('.close-dialog').addEventListener('click',close);
  dialog.addEventListener('click',e=>{if(e.target===dialog){const b=dialog.getBoundingClientRect();if(e.clientX<b.left||e.clientX>b.right||e.clientY<b.top||e.clientY>b.bottom)close()}});
  const now=new Date();form.elements.month.min=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
- form.addEventListener('submit',e=>{e.preventDefault();if(!form.reportValidity())return;const d=new FormData(form);brief=`GHO O O MO — MY TRAVEL BRIEF\n\nTravel style: ${d.get('style')}\nDestination: ${d.get('destination')}\nPreferred month: ${d.get('month')}\nTravellers: ${d.get('travellers')}\n\nTravel notes:\n${d.get('notes')||'Open to ideas.'}\n\nThis is a planning brief, not a confirmed booking. No enquiry has been sent. Confirm itinerary, availability and price with your travel organiser.`;document.getElementById('brief-text').textContent=brief;form.hidden=true;result.hidden=false;document.getElementById('download-brief').focus()});
+ form.addEventListener('submit',e=>{e.preventDefault();if(!form.reportValidity())return;const d=new FormData(form);brief=`GHOOOMO — MY TRAVEL BRIEF\n\nTravel style: ${d.get('style')}\nDestination: ${d.get('destination')}\nPreferred month: ${d.get('month')}\nTravellers: ${d.get('travellers')}\n\nTravel notes:\n${d.get('notes')||'Open to ideas.'}\n\nThis is a planning brief, not a confirmed booking. No enquiry has been sent. Confirm itinerary, availability and price with your travel organiser.`;document.getElementById('brief-text').textContent=brief;form.hidden=true;result.hidden=false;document.getElementById('download-brief').focus()});
  document.getElementById('download-brief').addEventListener('click',()=>{const url=URL.createObjectURL(new Blob([brief],{type:'text/plain;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='Ghooomo-Travel-Brief.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
  document.getElementById('edit-brief').addEventListener('click',()=>{result.hidden=true;form.hidden=false;form.elements.destination.focus()});
  document.querySelectorAll('a[href^="/"]').forEach(a=>a.addEventListener('click',e=>{if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||e.button!==0||paused||a.pathname===location.pathname)return;e.preventDefault();root.classList.add('leaving');setTimeout(()=>location.assign(a.href),300)}));
