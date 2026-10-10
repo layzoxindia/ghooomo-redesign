@@ -40,3 +40,21 @@
 .sequence-landscape img,.shared-half img,.road-sequence img{display:block;width:100%;height:100%;object-fit:cover}
 .road-sequence img{height:clamp(240px,28vw,420px)}
 @media(max-width:700px){.road-sequence article{flex:0 0 82vw}.solo-sequence .sequence-landscape{flex:0 0 80vw}.world-sequence .sequence-intro h2{overflow-wrap:break-word}}
+
+/* Phase 6 production motion and layout safeguards */
+.paused .home-backdrop img,.paused .cinematic img,.paused .solo-hero img,.paused .couple-hero img,.paused .group-hero img{animation-play-state:paused!important}
+@media(prefers-reduced-motion:reduce){
+html{scroll-behavior:auto!important}
+*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+@media(max-width:700px){
+.home-stage{height:auto;min-height:max(700px,100svh)}
+.home-copy{padding-bottom:0}
+.portal-theatre{pointer-events:none}
+.world-sequence .sequence-scene,.world-sequence .road-sequence{-webkit-overflow-scrolling:touch}
+}
+@media(max-width:380px){
+.home-copy h1{font-size:clamp(40px,12vw,51px)}
+.world-selector button{font-size:12px}
+.sequence-overlay{left:16px;bottom:24px}
+}
