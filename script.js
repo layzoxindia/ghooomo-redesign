@@ -22,6 +22,36 @@
   function setScene(key){const s=scenes[key],version=++sceneVersion;document.querySelector(".home-stage").dataset.activeWorld=key;tabs.forEach(t=>{const active=t.dataset.scene===key;t.setAttribute('aria-selected',String(active));t.tabIndex=active?0:-1});link.href='/'+key+'/';link.lastElementChild.replaceChildren(document.createTextNode(s.label));const small=document.createElement('small');small.textContent=s.note;link.lastElementChild.append(small);root.style.setProperty('--accent',s.accent);const next=new Image();next.onload=()=>{if(version!==sceneVersion)return;img.src=next.src;img.alt=s.alt;img.animate([{opacity:.35},{opacity:1}],{duration:paused?0:650,easing:'ease-out'})};next.src='/assets/scenes/'+s.photo+'.webp';}
   tabs.forEach((t,i)=>{t.tabIndex=i===0?0:-1;t.addEventListener('click',()=>setScene(t.dataset.scene));t.addEventListener('keydown',e=>{if(!['ArrowRight','ArrowLeft','Home','End'].includes(e.key))return;e.preventDefault();const n=e.key==='Home'?0:e.key==='End'?2:(i+(e.key==='ArrowRight'?1:2))%3;tabs[n].focus();setScene(tabs[n].dataset.scene)})});
  }
+
+ // Native-scroll cinematic progression: only visible scenes are updated.
+ const sequence=document.querySelector('.world-sequence');
+ if(sequence){
+  const frames=[...sequence.querySelectorAll('.sequence-landscape,.road-sequence article')];
+  const pano=sequence.querySelector('.shared-panorama');
+  let ticking=false;
+  function paintJourney(){
+   ticking=false;
+   if(paused)return;
+   const rect=sequence.getBoundingClientRect();
+   const viewport=innerHeight||1;
+   const progress=Math.max(0,Math.min(1,(viewport-rect.top)/(viewport+rect.height)));
+   sequence.style.setProperty('--journey-progress',progress.toFixed(3));
+   if(pano){
+    const split=45+progress*16;
+    pano.style.setProperty('--panorama-split',split.toFixed(2)+'%');
+   }
+   frames.forEach((frame,i)=>{
+    const bounds=frame.getBoundingClientRect();
+    const local=Math.max(0,Math.min(1,(viewport-bounds.top)/(viewport+bounds.height)));
+    frame.style.setProperty('--chapter-progress',local.toFixed(3));
+   });
+  }
+  function queueJourney(){if(!ticking){ticking=true;requestAnimationFrame(paintJourney)}}
+  addEventListener('scroll',queueJourney,{passive:true});
+  addEventListener('resize',queueJourney,{passive:true});
+  motion.addEventListener('click',queueJourney);
+  queueJourney();
+ }
  document.querySelectorAll('[data-filter]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('[data-filter]').forEach(b=>{const active=b===button;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});document.querySelectorAll('.journey').forEach(card=>card.hidden=button.dataset.filter!=='all'&&card.dataset.category!==button.dataset.filter)}));
  const dialog=document.getElementById('planner'),form=document.getElementById('brief-form'),result=document.getElementById('brief-result');
  let brief='',lastTrigger;
