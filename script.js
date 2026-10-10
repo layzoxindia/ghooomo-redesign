@@ -52,6 +52,20 @@
   motion.addEventListener('click',queueJourney);
   queueJourney();
  }
+
+ // Touch-first chapter rails: accessible arrow controls without scroll hijacking.
+ document.querySelectorAll('.solo-sequence .sequence-scene,.group-sequence .road-sequence').forEach(rail=>{
+  rail.setAttribute('tabindex','0');
+  rail.setAttribute('role','region');
+  rail.setAttribute('aria-label','Travel story chapters. Use left and right arrow keys to explore.');
+  rail.addEventListener('keydown',event=>{
+   if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return;
+   if(rail.scrollWidth<=rail.clientWidth+4)return;
+   event.preventDefault();
+   const amount=rail.clientWidth*.82*(event.key==='ArrowRight'?1:-1);
+   rail.scrollBy({left:amount,behavior:paused?'instant':'smooth'});
+  });
+ });
  document.querySelectorAll('[data-filter]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('[data-filter]').forEach(b=>{const active=b===button;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});document.querySelectorAll('.journey').forEach(card=>card.hidden=button.dataset.filter!=='all'&&card.dataset.category!==button.dataset.filter)}));
  const dialog=document.getElementById('planner'),form=document.getElementById('brief-form'),result=document.getElementById('brief-result');
  let brief='',lastTrigger;
