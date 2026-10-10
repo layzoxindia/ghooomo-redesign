@@ -1,7 +1,5 @@
 # Ghooomo Redesign
 
-Static travel website from Ghooomo_Redesign_Preview.zip.
+Static website from the uploaded preview. Deploy repository root on Vercel with Framework Preset Other and no build command.
 
-Deploy the repository root on Vercel with Framework Preset Other and no build command.
-
-The enquiry form is a design preview only; it does not send or store enquiries.
+Enquiry form is a preview only and does not send or store data.
